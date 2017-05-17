@@ -1,21 +1,10 @@
-#!/usr/bin/env python
-###
-### This is a web service for use with App
-### Inventor for Android (<http://appinventor.googlelabs.com>)
-### This particular service stores and retrieves tag-value pairs 
-### using the protocol necessary to communicate with the TinyWebDB
-### component of an App Inventor app.
-
-
-### Author: David Wolber (wolber@usfca.edu), using sample of Hal Abelson
-
+import json
 import logging
 from cgi import escape
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
 from google.appengine.ext.db import Key
-from django.utils import simplejson as json
+
+import webapp2
 
 class StoredData(db.Model):
   tag = db.StringProperty()
@@ -42,11 +31,10 @@ to communicate with a mobile app created with App Inventor.
 The page your are looking at is 
 a web page interface to the web service to help programmers with debugging. You
 can invoke the get and store operations by hand, view the existing entries, and also delete individual entries.</p>
-
 </td> </tr> </table>'''
 
 
-class MainPage(webapp.RequestHandler):
+class MainPage(webapp2.RequestHandler):
 
   def get(self):
     write_page_header(self);
@@ -66,7 +54,7 @@ class MainPage(webapp.RequestHandler):
 ### to post and to get.
 
 
-class StoreAValue(webapp.RequestHandler):
+class StoreAValue(webapp2.RequestHandler):
 
   def store_a_value(self, tag, value):
     # There's a potential readers/writers error here :(
@@ -97,7 +85,7 @@ class StoreAValue(webapp.RequestHandler):
        <input type="submit" value="Store a value">
     </form></body></html>\n''')
 
-class GetValue(webapp.RequestHandler):
+class GetValue(webapp2.RequestHandler):
 
   def get_value(self, tag):
     entry = db.GqlQuery("SELECT * FROM StoredData where tag = :1", tag).get()
@@ -130,7 +118,7 @@ class GetValue(webapp.RequestHandler):
 ### The DeleteEntry is called from the Web only, by pressing one of the
 ### buttons on the main page.  So there's no get method, only a post.
 
-class DeleteEntry(webapp.RequestHandler):
+class DeleteEntry(webapp2.RequestHandler):
 
   def post(self):
     logging.debug('/deleteentry?%s\n|%s|' %
@@ -156,19 +144,20 @@ def write_available_operations(self):
 
 ### Generate the page header
 def write_page_header(self):
-  self.response.headers['Content-Type'] = 'text/html'
-  self.response.out.write('''
-     <html>
-     <head>
-     <style type="text/css">
-        body {margin-left: 5% ; margin-right: 5%; margin-top: 0.5in;
-             font-family: verdana, arial,"trebuchet ms", helvetica, sans-serif;}
-        ul {list-style: disc;}
-     </style>
-     <title>Tiny WebDB</title>
-     </head>
-     <body>''')
-  self.response.out.write('<h2>App Inventor for Android: Custom Tiny WebDB Service</h2>')
+	
+	self.response.headers['Content-Type'] = 'text/html'
+	self.response.out.write('''
+	     <html>
+	     <head>
+	     <style type="text/css">
+	        body {margin-left: 5% ; margin-right: 5%; margin-top: 0.5in;
+	             font-family: verdana, arial,"trebuchet ms", helvetica, sans-serif;}
+	        ul {list-style: disc;}
+	     </style>
+	     <title>Tiny WebDB</title>
+	     </head>
+	     <body>''')
+	self.response.out.write('<h2>App Inventor for Android: Custom Tiny WebDB Service</h2>')
 
 ### Show the tags and values as a table.
 def show_stored_data(self):
@@ -244,35 +233,10 @@ def WriteWebFooter(handler, writer):
 ### A utility that guards against attempts to delete a non-existent object
 def dbSafeDelete(key):
   if db.get(key) :  db.delete(key)
-
-
-### Assign the classes to the URL's
-
-application =     \
-   webapp.WSGIApplication([('/', MainPage),
+  
+app = webapp2.WSGIApplication([('/', MainPage),
                            ('/storeavalue', StoreAValue),
                            ('/deleteentry', DeleteEntry),
                            ('/getvalue', GetValue)
                            ],
                           debug=True)
-
-def main():
-  run_wsgi_app(application)
-
-if __name__ == '__main__':
-  main()
-
-### Copyright 2009 Google Inc.
-###
-### Licensed under the Apache License, Version 2.0 (the "License");
-### you may not use this file except in compliance with the License.
-### You may obtain a copy of the License at
-###
-###     http://www.apache.org/licenses/LICENSE-2.0
-###
-### Unless required by applicable law or agreed to in writing, software
-### distributed under the License is distributed on an "AS IS" BASIS,
-### WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-### See the License for the specific language governing permissions and
-### limitations under the License.
-###
