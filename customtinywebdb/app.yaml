@@ -1,14 +1,16 @@
-application: customtinywebdb
-version: 1
-runtime: python
+runtime: python27
 api_version: 1
+threadsafe: yes
 
-handlers:
+handlers:  
 - url: /images
   static_dir: images
-
+  
 - url: .*
-  script: main.py
-
-
-
+  script: main.app
+  
+libraries:
+- name: jinja2
+  version: "2.6"
+- name: markupsafe
+  version: "0.15"
